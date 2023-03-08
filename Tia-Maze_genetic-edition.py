@@ -1,6 +1,7 @@
 import turtle
 import math
 import random
+import time
 import numpy as np
 
 wn = turtle.Screen()
@@ -40,6 +41,8 @@ MUTATION_RATE = 0.8
 PLAYER_SPEED = 100 #num of pixels the player moves, leave it at 100
 MOVE_OPTIONS = ["right", "left", "up", "down"]
 GENERATION_THRESH = 50
+NUM_BEST_MOVES = 5 # more than 0
+KEPT_MOVE = False
 
 # ********************************************************************
 class Pen(turtle.Turtle):
@@ -97,7 +100,7 @@ class Player(turtle.Turtle):
     """
     def move(self, direction):
 
-        # time.sleep(0.1)
+        time.sleep(0)
         self.showturtle()
 
         if direction == "right":
@@ -139,6 +142,7 @@ class Player(turtle.Turtle):
         if self.speed == 0:
             return
 
+        prev_move = (-1, -1)
         for i, move in enumerate(self.move_list):
             # Right, Left, Up, Down
             if move == "right":
@@ -153,7 +157,8 @@ class Player(turtle.Turtle):
                 print(move)
                 return
 
-            if maze_array[new_coord[0]][new_coord[1]] == "0":
+            if maze_array[new_coord[0]][new_coord[1]] == "0" and (new_coord[0], new_coord[1]) != prev_move:
+                prev_move = (self.row, self.col)
                 self.move(move)
                 wn.update()
 
@@ -244,15 +249,15 @@ def uniform_crossover(arr1, arr2, p = 0.5):
 Mutation every move list of all player
 """
 def mutate(array):
-    i = random.randint(0, len(array) - 1)
-    new_move = ""
-    ## Find new move that is not same as old move
-    while new_move == array[i]:
-        new_move = random.choice(MOVE_OPTIONS)
-    
-    array[i] = new_move
+    if random.random() <= MUTATION_RATE:
+        i = random.randint(0, len(array) - 1)
 
-    return array
+        ## Find new move that is not same as old move
+        array[i] = random.choice([a for a in MOVE_OPTIONS if a != array[i]])
+
+        return array
+    else:
+        return array
 
 treasures = []
 
@@ -297,13 +302,13 @@ def setup_maze(level):
 maze = [
     list("XXXBBXXXXXAXXAXXXX"), #0
     list("XPXAAXXXXBBBXXACXX"), #1
-    list("X0XCX000000000XXBX"), #2
-    list("X0XBX0BBXXXXX0XXBA"), #3
+    list("X0XCX00000000TXXBX"), #2
+    list("X0XBX0BBXXXXXXXXBA"), #3
     list("X0XXX0XXCABXA0XXBX"), #4
-    list("X0X000XXXBXXB000AX"), #5
-    list("X0XX0000XACAX0XXXX"), #6
+    list("X00000XXXBXXB000AX"), #5
+    list("X0XX000XXACAX0XXXX"), #6
     list("X0000XXXXXXXX000XX"), #7
-    list("X0000000XBAXXTXXXX"), #8
+    list("X0000XXXXBAXX0XXXX"), #8
     list("XXXABBAXXXXXBAXXXX"), #9
 ]
 
@@ -333,9 +338,6 @@ while(found != True and turn < GENERATION_THRESH):
     for player in players:
         player.goto(screen_x, screen_y)
 
-    best_fitness = 10000
-    best_i = 0
-
     for i in range(len(players)):
 
         if (found):
@@ -346,31 +348,39 @@ while(found != True and turn < GENERATION_THRESH):
         found = players[i].check_move(maze)
         fitness = calc_goal_distance(players[i].row, players[i].col, goal_point[0], goal_point[1], "manhattan")
         players[i].fitness = fitness
-
-        if fitness < best_fitness: 
-            best_fitness = fitness
-            best_i = i
         
         players[i].destroy()
 
-    best_moves = players[best_i].move_list
+
+    players.sort(key=lambda x: x.fitness)
+    best_moves_list = [players[x].move_list for x in range(NUM_BEST_MOVES)]
+    
     new_players_moves = []
+    start_index = 0
 
-    mutateProb = random.random()
-    if (found == False):
-        players.sort(key=lambda x: x.fitness)
-        for j in range(len(players)):
+    if KEPT_MOVE:
+        new_players_moves.extend(best_moves_list)
+        start_index = NUM_BEST_MOVES
+
+    k = 0
+    
+    if (found != True):
+        for j in range(start_index, len(players)):
             worse_moves = players[j].move_list
-            new_moves = uniform_crossover(best_moves, worse_moves)
-
-            ## mutate all moves of all player
-            if mutateProb <= MUTATION_RATE:
-                new_moves = mutate(new_moves)
+            
+            new_moves = uniform_crossover(best_moves_list[k], worse_moves)
+            
+            new_moves = mutate(new_moves)
 
             new_players_moves.append(new_moves)
+
+            if k == NUM_BEST_MOVES - 1:
+                k = 0
+            else:
+                k += 1
         
         players_moves = new_players_moves
             
     turn += 1
     print("turn: ", turn)
-    print("best_fitness: ", best_fitness)
+    print("best_fitness: ", players[0].fitness)
