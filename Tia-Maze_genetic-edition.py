@@ -36,7 +36,7 @@ turtle.register_shape("img/pass1.gif")
 # FPS = 26
 NUM_MOVES = 100
 NUM_PLAYERS = 20
-MUTATION_RATE = 0.5
+MUTATION_RATE = 0.8
 PLAYER_SPEED = 100 #num of pixels the player moves, leave it at 100
 MOVE_OPTIONS = ["right", "left", "up", "down"]
 GENERATION_THRESH = 50
@@ -243,20 +243,16 @@ def uniform_crossover(arr1, arr2, p = 0.5):
 """
 Mutation every move list of all player
 """
-def mutate(array, mutation_rate=MUTATION_RATE):
-    if random.random() <= mutation_rate:
-        i = random.randint(0, len(array) - 1)
-        new_move = ""
-        ## Find new move that is not same as old move
-        while new_move == array[i]:
-            new_move = random.choice(MOVE_OPTIONS)
-        
-        array[i] = new_move
+def mutate(array):
+    i = random.randint(0, len(array) - 1)
+    new_move = ""
+    ## Find new move that is not same as old move
+    while new_move == array[i]:
+        new_move = random.choice(MOVE_OPTIONS)
+    
+    array[i] = new_move
 
-        return array
-
-    else:
-        return array
+    return array
 
 treasures = []
 
@@ -348,7 +344,7 @@ while(found != True and turn < GENERATION_THRESH):
         players[i].move_list = players_moves[i]
 
         found = players[i].check_move(maze)
-        fitness = calc_goal_distance(players[i].row, players[i].col, goal_point[0], goal_point[1])
+        fitness = calc_goal_distance(players[i].row, players[i].col, goal_point[0], goal_point[1], "manhattan")
         players[i].fitness = fitness
 
         if fitness < best_fitness: 
@@ -360,18 +356,21 @@ while(found != True and turn < GENERATION_THRESH):
     best_moves = players[best_i].move_list
     new_players_moves = []
 
+    mutateProb = random.random()
     if (found == False):
         players.sort(key=lambda x: x.fitness)
         for j in range(len(players)):
             worse_moves = players[j].move_list
             new_moves = uniform_crossover(best_moves, worse_moves)
 
-            new_moves = mutate(new_moves)
+            ## mutate all moves of all player
+            if mutateProb <= MUTATION_RATE:
+                new_moves = mutate(new_moves)
 
             new_players_moves.append(new_moves)
         
         players_moves = new_players_moves
             
     turn += 1
-    print(turn)
-    print(best_fitness)
+    print("turn: ", turn)
+    print("best_fitness: ", best_fitness)
