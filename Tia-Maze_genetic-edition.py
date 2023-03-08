@@ -2,7 +2,6 @@ import turtle
 import math
 import random
 import numpy as np
-from concurrent.futures import ThreadPoolExecutor
 
 wn = turtle.Screen()
 wn.bgcolor("papayawhip")
