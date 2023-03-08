@@ -327,10 +327,6 @@ turn = 1
 found = False
 
 
-# def explore_maze(player: Player):
-#     a = 0
-
-
 ## Start position in screen
 screen_x = -860 + (start_point[1] * 100)
 screen_y = 480 - (start_point[0] * 100)
@@ -344,14 +340,6 @@ while(found != True and turn < GENERATION_THRESH):
 
     best_fitness = 10000
     best_i = 0
-
-    # with ThreadPoolExecutor() as ex:
-    #     for player in players:
-            
-    #         if (found):
-    #             break
-
-    #         ex.submit(explore_maze, player)
 
     for i in range(len(players)):
 
