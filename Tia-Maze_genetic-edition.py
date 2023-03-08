@@ -346,7 +346,7 @@ while(found != True and turn < GENERATION_THRESH):
         players[i].move_list = players_moves[i]
 
         found = players[i].check_move(maze)
-        fitness = calc_goal_distance(players[i].row, players[i].col, goal_point[0], goal_point[1], "manhattan")
+        fitness = calc_goal_distance(players[i].row, players[i].col, goal_point[0], goal_point[1])
         players[i].fitness = fitness
         
         players[i].destroy()
