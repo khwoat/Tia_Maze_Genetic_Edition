@@ -302,7 +302,7 @@ def setup_maze(level):
 maze = [
     list("XXXBBXXXXXAXXAXXXX"), #0
     list("XPXAAXXXXBBBXXACXX"), #1
-    list("X0XCX00000000TXXBX"), #2
+    list("X000000000000TXXBX"), #2
     list("X0XBX0BBXXXXXXXXBA"), #3
     list("X0XXX0XXCABXA0XXBX"), #4
     list("X00000XXXBXXB000AX"), #5
@@ -382,5 +382,5 @@ while(found != True and turn < GENERATION_THRESH):
         players_moves = new_players_moves
             
     turn += 1
-    print("turn: ", turn)
-    print("best_fitness: ", players[0].fitness)
+    print("turn:", turn)
+    print("best_fitness:", players[0].fitness)
