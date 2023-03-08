@@ -21,20 +21,6 @@ turtle.register_shape("img/road.gif")
 turtle.register_shape("img/pass.gif")
 turtle.register_shape("img/pass1.gif")
 
-# MAZE_WIDTH = 25
-# MAZE_HEIGHT = 20
-# WINDOW_X = MAZE_WIDTH * 44
-# WINDOW_Y = MAZE_HEIGHT * 44 + 40
-# WHITE = (255, 255, 255)
-# TEXT_Y = WINDOW_Y - 30#WINDOW_Y * 23/24
-# TEXT_X = 110 #WINDOW_X/8
-# TEXT_SIZE = 16
-# FIT_FUNC = "distance" # "unique" or "distance"
-# SELECTION_CUTOFF = 0.1
-# DEAD_END_PENALTY = 200
-# MADEIT_THRESH = 0 # Put zero if only one duck will do
-# QUACKS_FILEPATH = "C:/Users/Justi/PycharmProjects/maze/duck_sounds"
-# FPS = 26
 NUM_MOVES = 100
 NUM_PLAYERS = 20
 MUTATION_RATE = 0.8
@@ -43,6 +29,7 @@ MOVE_OPTIONS = ["right", "left", "up", "down"]
 GENERATION_THRESH = 50
 NUM_BEST_MOVES = 5 # more than 0
 KEPT_MOVE = False
+
 
 # ********************************************************************
 class Pen(turtle.Turtle):
