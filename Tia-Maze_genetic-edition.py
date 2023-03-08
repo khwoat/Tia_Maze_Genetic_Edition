@@ -1,8 +1,11 @@
+"""
+Ref: https://www.justintopfer.com/using-genetic-algorithms-to-solve-mazes-in-python/
+"""
+
 import turtle
 import math
 import random
 import time
-import numpy as np
 
 wn = turtle.Screen()
 wn.bgcolor("papayawhip")
@@ -18,8 +21,7 @@ turtle.register_shape("img/wall2.gif")
 turtle.register_shape("img/wall3.gif")
 turtle.register_shape("img/wall4.gif")
 turtle.register_shape("img/road.gif")
-turtle.register_shape("img/pass.gif")
-turtle.register_shape("img/pass1.gif")
+
 
 NUM_MOVES = 100
 NUM_PLAYERS = 20
@@ -28,7 +30,7 @@ PLAYER_SPEED = 100 #num of pixels the player moves, leave it at 100
 MOVE_OPTIONS = ["right", "left", "up", "down"]
 GENERATION_THRESH = 50
 NUM_BEST_MOVES = 5 # more than 0
-KEPT_MOVE = False
+IS_KEPT_MOVE = False
 
 
 # ********************************************************************
@@ -37,15 +39,6 @@ class Pen(turtle.Turtle):
         turtle.Turtle.__init__(self)
         self.shape("square")
         self.color("white")
-        self.penup()
-        self.speed(0)
-        
-        
-class PassW(turtle.Turtle):
-    def __init__(self):
-        turtle.Turtle.__init__(self)
-        self.shape("img/pass1.gif")
-        self.color("red")
         self.penup()
         self.speed(0)
 
@@ -83,7 +76,7 @@ class Player(turtle.Turtle):
         self.row = spawn_position[1]
 
     """
-    Move player to available tile
+    Move player to specified tile
     """
     def move(self, direction):
 
@@ -183,7 +176,7 @@ class Player(turtle.Turtle):
             return None
     
     """
-    Destroy turtle
+    Destroy turtle (image)
     """
     def destroy(self):
         self.goto(2000, 2000)
@@ -226,7 +219,7 @@ def uniform_crossover(arr1, arr2, p = 0.5):
     assert len(arr1) == len(arr2), "Arrays must have the same length"
     new_arr = []
     for i in range(len(arr1)):
-        if np.random.rand() < p:
+        if random.random() < p:
             new_arr.append(arr1[i])
         else:
             new_arr.append(arr2[i])
@@ -246,8 +239,10 @@ def mutate(array):
     else:
         return array
 
-treasures = []
 
+"""
+Display the maze on screen
+"""
 def setup_maze(level):
     global start_point
     global goal_point
@@ -284,7 +279,6 @@ def setup_maze(level):
 
             if character == "T":
                 goal_point = [y, x]
-                treasures.append(Treasure(screen_x, screen_y))
 
 maze = [
     list("XXXBBXXXXXAXXAXXXX"), #0
@@ -303,14 +297,13 @@ start_point = [0, 0]
 goal_point = [0, 0]
 
 pen = Pen()
-passW = PassW()
 father_player = Player(start_point, "img/tiar.gif")
 setup_maze(maze)
 
 wn.tracer(0)
 
 players_moves = create_moves_list()
-turn = 1
+generation = 1
 found = False
 
 
@@ -319,7 +312,10 @@ screen_x = -860 + (start_point[1] * 100)
 screen_y = 480 - (start_point[0] * 100)
 
 ## Start
-while(found != True and turn < GENERATION_THRESH):
+while(found != True and generation <= GENERATION_THRESH):
+
+    print("generation:", generation)
+
     players = [Player(start_point, "img/tia1r.gif") for i in range(NUM_PLAYERS)]
 
     for player in players:
@@ -345,7 +341,7 @@ while(found != True and turn < GENERATION_THRESH):
     new_players_moves = []
     start_index = 0
 
-    if KEPT_MOVE:
+    if IS_KEPT_MOVE:
         new_players_moves.extend(best_moves_list)
         start_index = NUM_BEST_MOVES
 
@@ -368,6 +364,8 @@ while(found != True and turn < GENERATION_THRESH):
         
         players_moves = new_players_moves
             
-    turn += 1
-    print("turn:", turn)
+    generation += 1
     print("best_fitness:", players[0].fitness)
+
+if (not found):
+    print("Not found. T-T")
