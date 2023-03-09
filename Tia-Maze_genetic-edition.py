@@ -24,6 +24,7 @@ turtle.register_shape("img/road.gif")
 
 
 MOVE_OPTIONS = ["right", "left", "up", "down"]
+PENALTY = 100
 NUM_MOVES = 100
 NUM_PLAYERS = 20
 MUTATION_RATE = 0.8
@@ -60,16 +61,18 @@ class Treasure(turtle.Turtle):
 class Player(turtle.Turtle):
     num_moves = NUM_MOVES
 
-    def __init__(self, spawn_position, img):
+    def __init__(self, spawn_position, id, img):
         turtle.Turtle.__init__(self)
 
         self.color("blue")
         self.penup()
         self.shape(img)
 
+        self.id = id
         self.move_list = []
         self.fitness = 0
         self.made_goal = 0
+        self.spawn_position = spawn_position
         self.col = spawn_position[0]
         self.row = spawn_position[1]
 
@@ -120,7 +123,7 @@ class Player(turtle.Turtle):
         if self.speed == 0:
             return
 
-        prev_move = (-1, -1)
+        prev_coord = self.spawn_position
         for i, move in enumerate(self.move_list):
             # Right, Left, Up, Down
             if move == "right":
@@ -135,8 +138,8 @@ class Player(turtle.Turtle):
                 print(move)
                 return
 
-            if maze_array[new_coord[0]][new_coord[1]] == "0" and (new_coord[0], new_coord[1]) != prev_move:
-                prev_move = (self.row, self.col)
+            if maze_array[new_coord[0]][new_coord[1]] == "0" and (new_coord[0], new_coord[1]) != prev_coord:
+                prev_coord = (self.row, self.col)
                 self.move(move)
                 wn.update()
 
@@ -146,8 +149,8 @@ class Player(turtle.Turtle):
                 return True
             
             else:
-                # Find a new coordinate that is not a wall and not the previous move
-                prev_coord = [self.row, self.col]
+                # If player hit the wall, add fitness value with penalty and find a new coordinate that is not a wall and not the previous move
+                self.fitness += PENALTY
                 while True:
                     new_coord = random.choice([(prev_coord[0], prev_coord[1]+1),
                                             (prev_coord[0], prev_coord[1]-1),
@@ -299,7 +302,7 @@ start_point = [0, 0]
 goal_point = [0, 0]
 
 pen = Pen()
-father_player = Player(start_point, "img/tiar.gif")
+father_player = Player(start_point, 10000, "img/tiar.gif")
 setup_maze(maze)
 
 wn.tracer(0)
@@ -318,23 +321,23 @@ while(found != True and generation <= GENERATION_THRESH):
 
     print("generation:", generation)
 
-    players = [Player(start_point, "img/tia1r.gif") for i in range(NUM_PLAYERS)]
+    players = [Player(start_point, i, "img/tia1r.gif") for i in range(NUM_PLAYERS)]
 
     for player in players:
         player.goto(screen_x, screen_y)
 
-    for i in range(len(players)):
+    for player in players:
 
         if (found):
             break
 
-        players[i].move_list = players_moves[i]
+        player.move_list = players_moves[player.id]
 
-        found = players[i].check_move(maze)
-        fitness = calc_goal_distance(players[i].row, players[i].col, goal_point[0], goal_point[1])
-        players[i].fitness = fitness
+        found = player.check_move(maze)
+        fitness = calc_goal_distance(player.row, player.col, goal_point[0], goal_point[1])
+        player.fitness = fitness
         
-        players[i].destroy()
+        player.destroy()
 
 
     players.sort(key=lambda x: x.fitness)
