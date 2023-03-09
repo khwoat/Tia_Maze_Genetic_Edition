@@ -11,4 +11,4 @@ pip3 install turtle
 ```
 
 ## Project status
-The game is stop to develop completely.
+The project is stop to develop completely.
