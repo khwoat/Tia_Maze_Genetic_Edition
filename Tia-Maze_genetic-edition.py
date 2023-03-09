@@ -23,11 +23,10 @@ turtle.register_shape("img/wall4.gif")
 turtle.register_shape("img/road.gif")
 
 
+MOVE_OPTIONS = ["right", "left", "up", "down"]
 NUM_MOVES = 100
 NUM_PLAYERS = 20
 MUTATION_RATE = 0.8
-PLAYER_SPEED = 100 #num of pixels the player moves, leave it at 100
-MOVE_OPTIONS = ["right", "left", "up", "down"]
 GENERATION_THRESH = 50
 NUM_BEST_MOVES = 5 # more than 0
 IS_KEPT_MOVE = False
@@ -59,7 +58,6 @@ class Treasure(turtle.Turtle):
 
 
 class Player(turtle.Turtle):
-    speed = PLAYER_SPEED
     num_moves = NUM_MOVES
 
     def __init__(self, spawn_position, img):
@@ -142,7 +140,7 @@ class Player(turtle.Turtle):
                 self.move(move)
                 wn.update()
 
-            elif (maze_array[new_coord[0]][new_coord[1]] == "T"):
+            elif maze_array[new_coord[0]][new_coord[1]] == "T":
                 self.move(move)
                 print("Found")
                 return True
@@ -150,15 +148,18 @@ class Player(turtle.Turtle):
             else:
                 # Find a new coordinate that is not a wall and not the previous move
                 prev_coord = [self.row, self.col]
-                new_coord = random.choice([(prev_coord[0], prev_coord[1]+1),
-                                           (prev_coord[0], prev_coord[1]-1),
-                                           (prev_coord[0]-1, prev_coord[1]),
-                                           (prev_coord[0]+1, prev_coord[1])])
-                if maze_array[new_coord[0]][new_coord[1]] == "0" and new_coord != prev_coord:
-                    self.row, self.col = new_coord
-                    # Replace the current position with the new position in the move list
-                    self.move_list[i] = self.get_move(prev_coord, new_coord)
-                    return
+                while True:
+                    new_coord = random.choice([(prev_coord[0], prev_coord[1]+1),
+                                            (prev_coord[0], prev_coord[1]-1),
+                                            (prev_coord[0]-1, prev_coord[1]),
+                                            (prev_coord[0]+1, prev_coord[1])])
+                    
+                    if (maze_array[new_coord[0]][new_coord[1]] == "0" or 
+                        maze_array[new_coord[0]][new_coord[1]] == "T" ) and new_coord != prev_coord:
+                        self.row, self.col = new_coord
+                        # Replace the current position with the new position in the move list
+                        self.move_list[i] = self.get_move(prev_coord, new_coord)
+                        return
 
     """
     Gets the appropriate move based on the new and previous coordinates
@@ -279,6 +280,7 @@ def setup_maze(level):
 
             if character == "T":
                 goal_point = [y, x]
+                Treasure(screen_x, screen_y)
 
 maze = [
     list("XXXBBXXXXXAXXAXXXX"), #0
