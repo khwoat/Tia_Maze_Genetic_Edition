@@ -146,6 +146,7 @@ class Player(turtle.Turtle):
             elif maze_array[new_coord[0]][new_coord[1]] == "T":
                 self.move(move)
                 print("Found")
+                print("Best path:", self.move_list[:i + 1])
                 return True
             
             else:
