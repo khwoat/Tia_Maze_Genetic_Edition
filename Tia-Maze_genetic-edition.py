@@ -127,13 +127,13 @@ class Player(turtle.Turtle):
         for i, move in enumerate(self.move_list):
             # Right, Left, Up, Down
             if move == "right":
-                new_coord = [self.row, self.col + 1]
+                new_coord = (self.row, self.col + 1)
             elif move == "left":
-                new_coord = [self.row, self.col - 1]
+                new_coord = (self.row, self.col - 1)
             elif move == "up":
-                new_coord = [self.row - 1, self.col]
+                new_coord = (self.row - 1, self.col)
             elif move == "down":
-                new_coord = [self.row + 1, self.col]
+                new_coord = (self.row + 1, self.col)
             else:
                 print(move)
                 return
@@ -152,10 +152,10 @@ class Player(turtle.Turtle):
                 # If player hit the wall, add fitness value with penalty and find a new coordinate that is not a wall and not the previous move
                 self.fitness += PENALTY
                 while True:
-                    new_coord = random.choice([(prev_coord[0], prev_coord[1]+1),
+                    new_coord = random.choice(((prev_coord[0], prev_coord[1]+1),
                                             (prev_coord[0], prev_coord[1]-1),
                                             (prev_coord[0]-1, prev_coord[1]),
-                                            (prev_coord[0]+1, prev_coord[1])])
+                                            (prev_coord[0]+1, prev_coord[1])))
                     
                     if (maze_array[new_coord[0]][new_coord[1]] == "0" or 
                         maze_array[new_coord[0]][new_coord[1]] == "T" ) and new_coord != prev_coord:
