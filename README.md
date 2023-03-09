@@ -5,7 +5,7 @@ The project was developed by using **Python** language with **Turtle** library t
 
 ## Install
 If you not have Python version 3.7 or higher, follow this instruction https://phoenixnap.com/kb/how-to-install-python-3-windows
-Otherwise, you must have Turtle library by use this command in cmd or terminal on Windows OS
+Otherwise, you must have the Turtle library by use this command in cmd or terminal on Windows OS
 ```
 pip3 install turtle
 ```
