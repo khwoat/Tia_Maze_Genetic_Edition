@@ -26,10 +26,10 @@ turtle.register_shape("img/road.gif")
 MOVE_OPTIONS = ["right", "left", "up", "down"]
 PENALTY = 100
 NUM_MOVES = 100
-NUM_PLAYERS = 20
+NUM_PLAYERS = 50
 MUTATION_RATE = 0.8
 GENERATION_THRESH = 50
-NUM_BEST_MOVES = 5 # more than 0
+NUM_BEST_MOVES = 10 # more than 0
 
 
 # ********************************************************************
@@ -74,6 +74,15 @@ class Player(turtle.Turtle):
         self.spawn_position = spawn_position
         self.col = spawn_position[0]
         self.row = spawn_position[1]
+
+    """
+    Call when start new generation
+    """
+    def new_generation(self, screen_x, screen_y):
+        self.col = self.spawn_position[0]
+        self.row = self.spawn_position[1]
+        
+        self.goto(screen_x, screen_y)
 
     """
     Move player to specified tile
@@ -288,13 +297,13 @@ def setup_maze(level):
 maze = [
     list("XXXBBXXXXXAXXAXXXX"), #0
     list("XPXAAXXXXBBBXXACXX"), #1
-    list("X0XCX00000000TXXBX"), #2
-    list("X0XBX0BBXXXXXXXXBA"), #3
+    list("X0XCX000000000XXBX"), #2
+    list("X0XBX0BBXXXXX0XXBA"), #3
     list("X00XX0XXCABXA0XXBX"), #4
     list("X00000XXXBXXB000AX"), #5
     list("X0XX000XXACAX0XXXX"), #6
     list("X0000XXXXXXXX000XX"), #7
-    list("X0000XXXXBAXX0XXXX"), #8
+    list("X0000XXXXBAXXTXXXX"), #8
     list("XXXABBAXXXXXBAXXXX"), #9
 ]
 
@@ -316,34 +325,37 @@ found = False
 screen_x = -860 + (start_point[1] * 100)
 screen_y = 480 - (start_point[0] * 100)
 
+players = [Player(start_point, i, "img/tia1r.gif") for i in range(NUM_PLAYERS)]
+
+for player in players:
+    player.move_list = players_moves[player.id]
+
 ## Start
 while(found != True and generation <= GENERATION_THRESH):
 
     print("generation:", generation)
-
-    players = [Player(start_point, i, "img/tia1r.gif") for i in range(NUM_PLAYERS)]
-
-    for player in players:
-        player.goto(screen_x, screen_y)
+    best_fitness = 10000; 
 
     for player in players:
 
         if (found):
             break
 
-        player.move_list = players_moves[player.id]
+        player.new_generation(screen_x, screen_y)
 
         found = player.check_move(maze)
         fitness = calc_goal_distance(player.row, player.col, goal_point[0], goal_point[1])
-        player.fitness = fitness
-        
+        player.fitness += fitness
+
+        if (fitness < best_fitness):
+            best_fitness = fitness
+            
         player.destroy()
 
 
     players.sort(key=lambda x: x.fitness)
     best_moves_list = [players[x].move_list for x in range(NUM_BEST_MOVES)]
-    
-    new_players_moves = []
+
     start_index = 0
 
     k = 0
@@ -356,17 +368,15 @@ while(found != True and generation <= GENERATION_THRESH):
             
             new_moves = mutate(new_moves)
 
-            new_players_moves.append(new_moves)
+            players[j].move_list = new_moves
 
             if k == NUM_BEST_MOVES - 1:
                 k = 0
             else:
                 k += 1
-        
-        players_moves = new_players_moves
             
     generation += 1
-    print("best_fitness:", players[0].fitness)
+    print("best_fitness:", best_fitness)
 
 if (not found):
     print("Not found. T-T")
