@@ -27,9 +27,9 @@ MOVE_OPTIONS = ["right", "left", "up", "down"]
 PENALTY = 100
 NUM_MOVES = 100
 NUM_PLAYERS = 50
-MUTATION_RATE = 0.8
-GENERATION_THRESH = 100
-NUM_BEST_MOVES = 5 # more than 0
+MUTATION_RATE = 0.5
+GENERATION_THRESH = 50
+NUM_BEST_MOVES = 20 # more than 0
 
 
 # ********************************************************************
@@ -69,7 +69,6 @@ class Player(turtle.Turtle):
 
         self.move_list = []
         self.fitness = 0
-        self.made_goal = 0
         self.spawn_position = spawn_position
         self.col = spawn_position[0]
         self.row = spawn_position[1]
@@ -81,6 +80,8 @@ class Player(turtle.Turtle):
     Call when start new generation
     """
     def new_generation(self, screen_x, screen_y):
+        self.fitness = 0
+
         self.col = self.spawn_position[0]
         self.row = self.spawn_position[1]
         self.prev_coord = (self.row, self.col)
@@ -130,7 +131,7 @@ class Player(turtle.Turtle):
     would result in hitting a wall, the function moves the player to a new spot that wouldn't hit a wall and
     returns this move
     """
-    def check_move(self, maze_array, move):
+    def check_move(self, maze_array, move, index):
 
         # Right, Left, Up, Down
         if move == "right":
@@ -153,40 +154,43 @@ class Player(turtle.Turtle):
         elif maze_array[new_coord[0]][new_coord[1]] == "T":
             self.move(move)
             print("Found")
-            print("Best path:", self.move_list[:i + 1])
+            print("Best path:", self.move_list[:index + 1])
             return True
         
         else:
-            # If player hit the wall, add fitness value with penalty and find a new coordinate that is not a wall and not the previous move
-            self.fitness += PENALTY
+            # If player hit the wall, find a new coordinate that is not a wall and not the previous move
             self.is_hit_wall = True
             self.destroy()
 
+            next_coord = (-1, -1)
             current_coord = (self.row, self.col)
-            while True:
-                new_coord = random.choice(((current_coord[0], current_coord[1]+1),
+            while next_coord != self.prev_coord:
+                next_coord = random.choice(((current_coord[0], current_coord[1]+1),
                                         (current_coord[0], current_coord[1]-1),
                                         (current_coord[0]-1, current_coord[1]),
                                         (current_coord[0]+1, current_coord[1])))
                 
-                if (maze_array[new_coord[0]][new_coord[1]] == "0" or 
-                    maze_array[new_coord[0]][new_coord[1]] == "T" ) and new_coord != current_coord:
+                if (maze_array[next_coord[0]][next_coord[1]] == "0" or 
+                    maze_array[next_coord[0]][next_coord[1]] == "T" ) and next_coord != self.prev_coord:
      
                     # Replace the current position with the new position in the move list
-                    self.move_list[i] = self.get_move(current_coord, new_coord)
+                    self.move_list[i] = self.get_move(current_coord, next_coord)
                     return False
+            
+            self.fitness = PENALTY
+            return False
 
     """
     Gets the appropriate move based on the new and previous coordinates
     """         
-    def get_move(self, current_coord, new_coord):
-        if new_coord[0] == current_coord[0] and new_coord[1] == current_coord[1] + 1:
+    def get_move(self, current_coord, next_coord):
+        if next_coord[0] == current_coord[0] and next_coord[1] == current_coord[1] + 1:
             return "right"
-        elif new_coord[0] == current_coord[0] and new_coord[1] == current_coord[1] - 1:
+        elif next_coord[0] == current_coord[0] and next_coord[1] == current_coord[1] - 1:
             return "left"
-        elif new_coord[0] == current_coord[0] + 1 and new_coord[1] == current_coord[1]:
+        elif next_coord[0] == current_coord[0] + 1 and next_coord[1] == current_coord[1]:
             return "down"
-        elif new_coord[0] == current_coord[0] - 1 and new_coord[1] == current_coord[1]:
+        elif next_coord[0] == current_coord[0] - 1 and next_coord[1] == current_coord[1]:
             return "up"
         else:
             return None
@@ -304,9 +308,9 @@ maze = [
     list("X0XBX0BBXXXXX0XXBA"), #3
     list("X00XX0XXCABXA0XXBX"), #4
     list("X00000XXXBXXB000AX"), #5
-    list("X0XX000XXACAX0XXXX"), #6
-    list("X0000XXXXXXXX000XX"), #7
-    list("X0000XXXXBAXXTXXXX"), #8
+    list("X0XXB0000ACAX0XXXX"), #6
+    list("XXXXX0XXXXXXX000XX"), #7
+    list("XXXXX00XXBAXXTXXXX"), #8
     list("XXXABBAXXXXXBAXXXX"), #9
 ]
 
@@ -338,20 +342,27 @@ hit_the_wall = False
 while(found != True and generation <= GENERATION_THRESH):
 
     print("generation:", generation)
-    best_fitness = 10000
 
+    ## Set value for players in new generation
+    for player in players:
+        player.new_generation(screen_x, screen_y)
+
+    ## Move players
     for i in range(NUM_MOVES):
 
         if (found):
             break
 
-        time.sleep(0)
+        time.sleep(0.05)
 
         hit_wall_count = 0
         for player in players:
 
+            if (found):
+                break
+
             if player.is_hit_wall == False:
-                found = player.check_move(maze, player.move_list[i])
+                found = player.check_move(maze, player.move_list[i], i)
             else:
                 hit_wall_count += 1
         
@@ -361,31 +372,26 @@ while(found != True and generation <= GENERATION_THRESH):
         wn.update()
 
 
+    ## Calculate fitness value for all players
     for player in players:
         fitness = calc_goal_distance(player.row, player.col, goal_point[0], goal_point[1])
-        player.fitness += fitness
 
-        if (fitness < best_fitness):
-            best_fitness = fitness
+        if player.fitness < PENALTY:
+            player.fitness = fitness
 
-        player.new_generation(screen_x, screen_y)
 
     players.sort(key=lambda x: x.fitness)
     best_moves_list = [players[x].move_list for x in range(NUM_BEST_MOVES)]
 
-    start_index = 0
-
-    k = 0
-    
+    k = 0  
     if (found != True):
-        for j in range(start_index, len(players)):
-            worse_moves = players[j].move_list
+        for player in players:
             
-            new_moves = uniform_crossover(best_moves_list[k], worse_moves)
+            new_moves = uniform_crossover(best_moves_list[k], player.move_list)
             
             new_moves = mutate(new_moves)
 
-            players[j].move_list = new_moves
+            player.move_list = new_moves
 
             if k == NUM_BEST_MOVES - 1:
                 k = 0
@@ -393,7 +399,7 @@ while(found != True and generation <= GENERATION_THRESH):
                 k += 1
             
     generation += 1
-    print("best_fitness:", best_fitness)
+    print("best_fitness:", players[0].fitness)
 
 if (not found):
     print("Not found. T-T")
