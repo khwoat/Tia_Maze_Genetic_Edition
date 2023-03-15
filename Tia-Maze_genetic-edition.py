@@ -66,8 +66,7 @@ class Player(turtle.Turtle):
         self.color("blue")
         self.penup()
         self.shape(img)
-
-        self.id = id
+        
         self.move_list = []
         self.fitness = 0
         self.made_goal = 0
@@ -311,24 +310,23 @@ start_point = [0, 0]
 goal_point = [0, 0]
 
 pen = Pen()
-father_player = Player(start_point, 10000, "img/tiar.gif")
+father_player = Player(start_point, "img/tiar.gif")
 setup_maze(maze)
 
 wn.tracer(0)
-
-players_moves = create_moves_list()
-generation = 1
-found = False
-
-
 ## Start position in screen
 screen_x = -860 + (start_point[1] * 100)
 screen_y = 480 - (start_point[0] * 100)
 
-players = [Player(start_point, i, "img/tia1r.gif") for i in range(NUM_PLAYERS)]
 
-for player in players:
-    player.move_list = players_moves[player.id]
+players_moves = create_moves_list()
+players = [Player(start_point, "img/tia1r.gif") for i in range(NUM_PLAYERS)]
+
+for i in range(NUM_PLAYERS):
+    players[i].move_list = players_moves[i]
+
+generation = 1
+found = False
 
 ## Start
 while(found != True and generation <= GENERATION_THRESH):
