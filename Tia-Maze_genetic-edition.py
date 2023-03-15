@@ -28,8 +28,8 @@ PENALTY = 100
 NUM_MOVES = 100
 NUM_PLAYERS = 50
 MUTATION_RATE = 0.8
-GENERATION_THRESH = 50
-NUM_BEST_MOVES = 10 # more than 0
+GENERATION_THRESH = 100
+NUM_BEST_MOVES = 5 # more than 0
 
 
 # ********************************************************************
@@ -60,19 +60,22 @@ class Treasure(turtle.Turtle):
 class Player(turtle.Turtle):
     num_moves = NUM_MOVES
 
-    def __init__(self, spawn_position, id, img):
+    def __init__(self, spawn_position, img):
         turtle.Turtle.__init__(self)
 
         self.color("blue")
         self.penup()
         self.shape(img)
-        
+
         self.move_list = []
         self.fitness = 0
         self.made_goal = 0
         self.spawn_position = spawn_position
         self.col = spawn_position[0]
         self.row = spawn_position[1]
+        self.prev_coord = (self.row, self.col)
+
+        self.is_hit_wall = False
 
     """
     Call when start new generation
@@ -80,6 +83,9 @@ class Player(turtle.Turtle):
     def new_generation(self, screen_x, screen_y):
         self.col = self.spawn_position[0]
         self.row = self.spawn_position[1]
+        self.prev_coord = (self.row, self.col)
+
+        self.is_hit_wall = False
         
         self.goto(screen_x, screen_y)
 
@@ -88,7 +94,6 @@ class Player(turtle.Turtle):
     """
     def move(self, direction):
 
-        time.sleep(0)
         self.showturtle()
 
         if direction == "right":
@@ -125,64 +130,63 @@ class Player(turtle.Turtle):
     would result in hitting a wall, the function moves the player to a new spot that wouldn't hit a wall and
     returns this move
     """
-    def check_move(self, maze_array):
+    def check_move(self, maze_array, move):
 
-        if self.speed == 0:
+        # Right, Left, Up, Down
+        if move == "right":
+            new_coord = (self.row, self.col + 1)
+        elif move == "left":
+            new_coord = (self.row, self.col - 1)
+        elif move == "up":
+            new_coord = (self.row - 1, self.col)
+        elif move == "down":
+            new_coord = (self.row + 1, self.col)
+        else:
+            print(move)
             return
 
-        prev_coord = self.spawn_position
-        for i, move in enumerate(self.move_list):
-            # Right, Left, Up, Down
-            if move == "right":
-                new_coord = (self.row, self.col + 1)
-            elif move == "left":
-                new_coord = (self.row, self.col - 1)
-            elif move == "up":
-                new_coord = (self.row - 1, self.col)
-            elif move == "down":
-                new_coord = (self.row + 1, self.col)
-            else:
-                print(move)
-                return
+        if maze_array[new_coord[0]][new_coord[1]] == "0" and new_coord != self.prev_coord:
+            self.prev_coord = (self.row, self.col)
+            self.move(move)
+            return False
 
-            if maze_array[new_coord[0]][new_coord[1]] == "0" and (new_coord[0], new_coord[1]) != prev_coord:
-                prev_coord = (self.row, self.col)
-                self.move(move)
-                wn.update()
+        elif maze_array[new_coord[0]][new_coord[1]] == "T":
+            self.move(move)
+            print("Found")
+            print("Best path:", self.move_list[:i + 1])
+            return True
+        
+        else:
+            # If player hit the wall, add fitness value with penalty and find a new coordinate that is not a wall and not the previous move
+            self.fitness += PENALTY
+            self.is_hit_wall = True
+            self.destroy()
 
-            elif maze_array[new_coord[0]][new_coord[1]] == "T":
-                self.move(move)
-                print("Found")
-                print("Best path:", self.move_list[:i + 1])
-                return True
-            
-            else:
-                # If player hit the wall, add fitness value with penalty and find a new coordinate that is not a wall and not the previous move
-                self.fitness += PENALTY
-                while True:
-                    new_coord = random.choice(((prev_coord[0], prev_coord[1]+1),
-                                            (prev_coord[0], prev_coord[1]-1),
-                                            (prev_coord[0]-1, prev_coord[1]),
-                                            (prev_coord[0]+1, prev_coord[1])))
-                    
-                    if (maze_array[new_coord[0]][new_coord[1]] == "0" or 
-                        maze_array[new_coord[0]][new_coord[1]] == "T" ) and new_coord != prev_coord:
-                        self.row, self.col = new_coord
-                        # Replace the current position with the new position in the move list
-                        self.move_list[i] = self.get_move(prev_coord, new_coord)
-                        return
+            current_coord = (self.row, self.col)
+            while True:
+                new_coord = random.choice(((current_coord[0], current_coord[1]+1),
+                                        (current_coord[0], current_coord[1]-1),
+                                        (current_coord[0]-1, current_coord[1]),
+                                        (current_coord[0]+1, current_coord[1])))
+                
+                if (maze_array[new_coord[0]][new_coord[1]] == "0" or 
+                    maze_array[new_coord[0]][new_coord[1]] == "T" ) and new_coord != current_coord:
+     
+                    # Replace the current position with the new position in the move list
+                    self.move_list[i] = self.get_move(current_coord, new_coord)
+                    return False
 
     """
     Gets the appropriate move based on the new and previous coordinates
     """         
-    def get_move(self, prev_coord, new_coord):
-        if new_coord[0] == prev_coord[0] and new_coord[1] == prev_coord[1] + 1:
+    def get_move(self, current_coord, new_coord):
+        if new_coord[0] == current_coord[0] and new_coord[1] == current_coord[1] + 1:
             return "right"
-        elif new_coord[0] == prev_coord[0] and new_coord[1] == prev_coord[1] - 1:
+        elif new_coord[0] == current_coord[0] and new_coord[1] == current_coord[1] - 1:
             return "left"
-        elif new_coord[0] == prev_coord[0] + 1 and new_coord[1] == prev_coord[1]:
+        elif new_coord[0] == current_coord[0] + 1 and new_coord[1] == current_coord[1]:
             return "down"
-        elif new_coord[0] == prev_coord[0] - 1 and new_coord[1] == prev_coord[1]:
+        elif new_coord[0] == current_coord[0] - 1 and new_coord[1] == current_coord[1]:
             return "up"
         else:
             return None
@@ -324,32 +328,47 @@ players = [Player(start_point, "img/tia1r.gif") for i in range(NUM_PLAYERS)]
 
 for i in range(NUM_PLAYERS):
     players[i].move_list = players_moves[i]
+    players[i].new_generation(screen_x, screen_y)
 
 generation = 1
 found = False
+hit_the_wall = False
 
 ## Start
 while(found != True and generation <= GENERATION_THRESH):
 
     print("generation:", generation)
-    best_fitness = 10000; 
+    best_fitness = 10000
 
-    for player in players:
+    for i in range(NUM_MOVES):
 
         if (found):
             break
 
-        player.new_generation(screen_x, screen_y)
+        time.sleep(0)
 
-        found = player.check_move(maze)
+        hit_wall_count = 0
+        for player in players:
+
+            if player.is_hit_wall == False:
+                found = player.check_move(maze, player.move_list[i])
+            else:
+                hit_wall_count += 1
+        
+        if hit_wall_count == NUM_PLAYERS:
+            break
+        
+        wn.update()
+
+
+    for player in players:
         fitness = calc_goal_distance(player.row, player.col, goal_point[0], goal_point[1])
         player.fitness += fitness
 
         if (fitness < best_fitness):
             best_fitness = fitness
-            
-        player.destroy()
 
+        player.new_generation(screen_x, screen_y)
 
     players.sort(key=lambda x: x.fitness)
     best_moves_list = [players[x].move_list for x in range(NUM_BEST_MOVES)]
