@@ -30,7 +30,6 @@ NUM_PLAYERS = 20
 MUTATION_RATE = 0.8
 GENERATION_THRESH = 50
 NUM_BEST_MOVES = 5 # more than 0
-IS_KEPT_MOVE = False
 
 
 # ********************************************************************
@@ -346,10 +345,6 @@ while(found != True and generation <= GENERATION_THRESH):
     
     new_players_moves = []
     start_index = 0
-
-    if IS_KEPT_MOVE:
-        new_players_moves.extend(best_moves_list)
-        start_index = NUM_BEST_MOVES
 
     k = 0
     
